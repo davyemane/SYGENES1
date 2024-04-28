@@ -71,6 +71,16 @@ class Student
      */
     private $takeUEs;
 
+    /**
+     * @ORM\Column(type="text", nullable=true)
+     */
+    private $birthCertificate;
+
+    /**
+     * @ORM\Column(type="text", nullable=true)
+     */
+    private $admissionCertificate;
+
     public function __construct()
     {
         $this->notes = new ArrayCollection();
@@ -234,6 +244,30 @@ class Student
                 $takeUE->setStudent(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getBirthCertificate(): ?string
+    {
+        return $this->birthCertificate;
+    }
+
+    public function setBirthCertificate(?string $birthCertificate): self
+    {
+        $this->birthCertificate = $birthCertificate;
+
+        return $this;
+    }
+
+    public function getAdmissionCertificate(): ?string
+    {
+        return $this->admissionCertificate;
+    }
+
+    public function setAdmissionCertificate(?string $admissionCertificate): self
+    {
+        $this->admissionCertificate = $admissionCertificate;
 
         return $this;
     }
