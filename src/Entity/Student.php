@@ -20,7 +20,7 @@ class Student
     private $id;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $studentID;
 
@@ -271,4 +271,10 @@ class Student
 
         return $this;
     }
+
+    public function __toString():string
+    {
+        return $this->name." ".$this->studentID;
+    }
+
 }

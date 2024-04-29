@@ -20,7 +20,7 @@ class Level
     private $id;
 
     /**
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="string", length=255)
      */
     private $levelNumber;
 
@@ -39,12 +39,12 @@ class Level
         return $this->id;
     }
 
-    public function getLevelNumber(): ?int
+    public function getLevelNumber(): ?string
     {
         return $this->levelNumber;
     }
 
-    public function setLevelNumber(int $levelNumber): self
+    public function setLevelNumber(string $levelNumber): self
     {
         $this->levelNumber = $levelNumber;
 
@@ -80,4 +80,10 @@ class Level
 
         return $this;
     }
+
+    public function __toString():string
+    {
+        return $this->levelNumber;
+    }
+
 }
