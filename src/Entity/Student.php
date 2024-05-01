@@ -6,6 +6,7 @@ use App\Repository\StudentRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\Entity(repositoryClass=StudentRepository::class)
@@ -26,12 +27,15 @@ class Student
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Assert\NotBlank(message="veuillez remplire votre nom")
      */
+    #[Assert\Length(min:3,minMessage:"veuillez avoir au moins 4 caractere")]
     private $name;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
      */
+    #[Assert\Email(message:'veuillez entrer un email corect!')]
     private $email;
 
     /**
@@ -81,10 +85,16 @@ class Student
      */
     private $admissionCertificate;
 
+    /**
+     * @ORM\ManyToMany(targetEntity=UE::class, mappedBy="students")
+     */
+    private $uEs;
+
     public function __construct()
     {
         $this->notes = new ArrayCollection();
         $this->takeUEs = new ArrayCollection();
+        $this->uEs = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -103,6 +113,8 @@ class Student
 
         return $this;
     }
+
+    
 
     public function getName(): ?string
     {
@@ -275,6 +287,33 @@ class Student
     public function __toString():string
     {
         return $this->name." ".$this->studentID;
+    }
+
+    /**
+     * @return Collection<int, UE>
+     */
+    public function getUEs(): Collection
+    {
+        return $this->uEs;
+    }
+
+    public function addUE(UE $uE): self
+    {
+        if (!$this->uEs->contains($uE)) {
+            $this->uEs[] = $uE;
+            $uE->addStudent($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUE(UE $uE): self
+    {
+        if ($this->uEs->removeElement($uE)) {
+            $uE->removeStudent($this);
+        }
+
+        return $this;
     }
 
 }

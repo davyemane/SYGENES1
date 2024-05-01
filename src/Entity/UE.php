@@ -59,9 +59,15 @@ class UE
      */
     private $field;
 
+    /**
+     * @ORM\ManyToMany(targetEntity=Student::class, inversedBy="uEs")
+     */
+    private $students;
+
     public function __construct()
     {
         $this->field = new ArrayCollection();
+        $this->students = new ArrayCollection();
     }
 
 
@@ -200,6 +206,30 @@ class UE
     public function __toString():string
     {
         return $this->name;
+    }
+
+    /**
+     * @return Collection<int, Student>
+     */
+    public function getStudents(): Collection
+    {
+        return $this->students;
+    }
+
+    public function addStudent(Student $student): self
+    {
+        if (!$this->students->contains($student)) {
+            $this->students[] = $student;
+        }
+
+        return $this;
+    }
+
+    public function removeStudent(Student $student): self
+    {
+        $this->students->removeElement($student);
+
+        return $this;
     }
 
 }

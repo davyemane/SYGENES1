@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity(repositoryClass=AdministrationRepository::class)
  */
-class Administration
+class Responsable
 {
     /**
      * @ORM\Id
