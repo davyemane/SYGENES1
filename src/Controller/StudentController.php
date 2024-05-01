@@ -11,130 +11,139 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 #[Route('/student')]
 class StudentController extends AbstractController
 {
-    //list of all student
+    // List of all students with error handling
     #[Route('/list/{page?1}/{nbre?12}', name: 'list_student')]
     public function home(ManagerRegistry $doctrine, $page, $nbre): Response
     {
-        $repository = $doctrine->getRepository(Student::class);
-        $nbStudent = $repository->count([]);
-        $nbPage = ceil($nbStudent/$nbre);
-        $student=$repository->findBy([],[],$nbre, ($page -1)*$nbre);
+        try {
+            $repository = $doctrine->getRepository(Student::class);
 
+            // Calculate total students and number of pages
+            $nbStudent = $repository->count([]);
+            $nbPage = ceil($nbStudent / $nbre);
 
+            // Fetch students with pagination (handle potential errors)
+            $student = $repository->findBy([], [], $nbre, ($page - 1) * $nbre);
+            if (!$student) {
+                // Handle case where no students are found
+                throw new NotFoundHttpException('No students found.');
+            }
 
-        return $this->render('student/list.html.twig', [
-            'students'=>$student, 
-            'isPaginated'=>true,
-            'nbPage'=>$nbPage,
-            'page'=>$page,
-            'nbre'=>$nbre
-        
-        ]);
-
+            return $this->render('student/list.html.twig', [
+                'students' => $student,
+                'isPaginated' => true,
+                'nbPage' => $nbPage,
+                'page' => $page,
+                'nbre' => $nbre,
+            ]);
+        } catch (NotFoundHttpException $e) {
+            // Handle the specific case of not finding students
+            $this->addFlash('error', 'No students found.');
+            return $this->redirectToRoute('list_student', ['page' => 1]); // Redirect to first page
+        } catch (\Exception $e) {
+            // Catch other unexpected exceptions for broader error handling
+            $this->addFlash('error', 'An error occurred.'); // Generic error message
+            // Log the error for further investigation
+            error_log($e->getMessage() . "\n" . $e->getTraceAsString(), 3, 'path/to/your/error.log'); // Replace with your log path
+            return $this->redirectToRoute('list_student', ['page' => 1]); // Redirect to first page
+        }
     }
+
 
     //detail of one student
     #[Route('/listDetail/{id<\d+>}', name: 'detail_student')]
     public function details(ManagerRegistry $doctrine, $id): Response
     {
-        $repository=$doctrine->getRepository(Student::class);
-        if ($id) {
-            $student=$repository->find($id);
-            return $this->render('student/detail.html.twig', ['student'=>$student]);
-
+        try {
+            $repository = $doctrine->getRepository(Student::class);
+    
+            // Fetch student details (handle potential exceptions)
+            $student = $repository->find($id);
+            if (!$student) {
+                // Handle case where student is not found
+                throw new NotFoundHttpException('Student with ID ' . $id . ' not found.');
+            }
+    
+            return $this->render('student/detail.html.twig', ['student' => $student]);
+        } catch (NotFoundHttpException $e) {
+            // Handle specific case of student not found
+            $this->addFlash('error', 'Student not found.'); // More user-friendly message
+            return $this->redirectToRoute('list_student');
+        } catch (\Exception $e) {
+            // Catch other unexpected exceptions for broader error handling
+            $this->addFlash('error', 'An error occurred.'); // Generic error message
+            // Log the error for further investigation
+            error_log($e->getMessage() . "\n" . $e->getTraceAsString(), 3, 'path/to/your/error.log'); // Replace with your log path
+            return $this->redirectToRoute('list_student');
         }
-        $this->addFlash('error', "the user does not existe ");
-        return $this->redirectToRoute('list_student');
-
-
-
     }
-
+    
 
 //update or add student
-    #[Route('/add/{id?0}', name: 'add_student')]
-    public function academicInscription($id, ManagerRegistry $doctrine, Request $request , SluggerInterface $slugger): Response
-    {
-        $studentDirectory = 'student_directory';
-        $entityManager = $doctrine->getManager();
-        
-        // Vérifier si un ID d'étudiant a été fourni
-        if ($id) {
-            $student = $entityManager->getRepository(Student::class)->find($id);
-        } else {
-            $student = new Student();
-        }
-    
-        $form = $this->createForm(StudentType::class, $student);
-    
-        $form->handleRequest($request);
-    
-        if ($form->isSubmitted() && $form->isValid()) {
+#[Route('/add/{id?0}', name: 'add_student')]
+public function academicInscription($id, ManagerRegistry $doctrine, Request $request, SluggerInterface $slugger): Response
+{
+    $studentDirectory = 'student_directory';
+    $entityManager = $doctrine->getManager();
 
-            //ici on recupere la photo du diplome
+    // Vérifier si un ID d'étudiant a été fourni
+    if ($id) {
+        $student = $entityManager->getRepository(Student::class)->find($id);
+    } else {
+        $student = new Student();
+    }
+
+    $form = $this->createForm(StudentType::class, $student);
+
+    $form->handleRequest($request);
+
+    if ($form->isSubmitted() && $form->isValid()) {
+
+        // Handle file uploads with try-catch blocks
+        try {
+
+            // Photo de Bac
             $photoBac = $form->get('photoBac')->getData();
-
-            // this condition is needed because the 'brochure' field is not required
-            // so the PDF file must be processed only when a file is uploaded
             if ($photoBac) {
                 $originalFilename = pathinfo($photoBac->getClientOriginalName(), PATHINFO_FILENAME);
-                // this is needed to safely include the file name as part of the URL
                 $safeFilename = $slugger->slug($originalFilename);
-                $newFilename = $safeFilename.'-'.uniqid().'.'.$photoBac->guessExtension();
-
-                // Move the file to the directory where brochures are stored
-                try {
-                    $photoBac->move($studentDirectory, $newFilename);
-                } catch (FileException $e) {
-                    // ... handle exception if something happens during file upload
-                }
-
-                // updates the 'brochureFilename' property to store the PDF file name
-                // instead of its contents
+                $newFilename = $safeFilename . '-' . uniqid() . '.' . $photoBac->guessExtension();
+                $photoBac->move($studentDirectory, $newFilename);
                 $student->setAdmissionCertificate($newFilename);
             }
 
-            //photo de l'acte de naissance 
-
+            // Acte de Naissance
             $Certificate = $form->get('Certificate')->getData();
-
-            // this condition is needed because the 'brochure' field is not required
-            // so the PDF file must be processed only when a file is uploaded
             if ($Certificate) {
                 $originalFilename = pathinfo($Certificate->getClientOriginalName(), PATHINFO_FILENAME);
-                // this is needed to safely include the file name as part of the URL
                 $safeFilename = $slugger->slug($originalFilename);
-                $newFilename = $safeFilename.'-'.uniqid().'.'.$Certificate->guessExtension();
-
-                // Move the file to the directory where brochures are stored
-                try {
-                    $Certificate->move($studentDirectory, $newFilename);
-                } catch (FileException $e) {
-                    // ... handle exception if something happens during file upload
-                }
-
-                // updates the 'brochureFilename' property to store the PDF file name
-                // instead of its contents
+                $newFilename = $safeFilename . '-' . uniqid() . '.' . $Certificate->guessExtension();
+                $Certificate->move($studentDirectory, $newFilename);
                 $student->setBirthCertificate($newFilename);
             }
 
-
-
-            $entityManager->persist($student);
-            $entityManager->flush();
-    
-            $message = $id ? 'mis à jour' : 'ajouté';
-            $this->addFlash('success', $student->getName() . " a été $message avec succès !");
-    
-            return $this->redirectToRoute("home_student");
+        } catch (FileException $e) {
+            // Handle file upload exceptions (e.g., disk space issues, invalid file types)
+            $this->addFlash('error', 'An error occurred while uploading files: ' . $e->getMessage());
+            // Consider logging the error for further investigation
         }
-    
-        return $this->render('student/accademicInscription.html.twig', ['form' => $form->createView()]);
+
+        $entityManager->persist($student);
+        $entityManager->flush();
+
+        $message = $id ? 'mis à jour' : 'ajouté';
+        $this->addFlash('success', $student->getName() . " a été $message avec succès !");
+
+        return $this->redirectToRoute("list_student");
     }
+
+    return $this->render('student/accademicInscription.html.twig', ['form' => $form->createView()]);
+}
 
 
 }
