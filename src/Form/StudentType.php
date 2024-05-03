@@ -51,7 +51,7 @@ class StudentType extends AbstractType
             ])
 
             ->add('photoBac', FileType::class, [
-                'label' => 'Photo of your diplom (Image files only)',
+                'label' => 'Photo of your diploma (Image files only)',
 
                 // unmapped means that this field is not associated to any entity property
                 'mapped' => false,
