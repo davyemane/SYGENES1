@@ -51,5 +51,12 @@ class HomePageController extends AbstractController
         ]);
     }
 
+    #[Route('/register_temp', name: 'app_register_temp_page')]
+    public function register_temp(){
+        return $this->render('home_page/registration_temp.html.twig', [
+            'controller_name' => 'HomePageController',
+        ]);
+    }
+
 }
 

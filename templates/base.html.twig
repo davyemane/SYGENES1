@@ -35,12 +35,12 @@
   </button>
 
   <div class="collapse navbar-collapse" id="navbarSupportedContent">
-    <ul class="navbar-nav mx-auto px-auto gap-4">
+    <ul class="navbar-nav mx-auto px-auto gap-4 nav-pills">
       <li class="nav-item active">
-        <a class="nav-link text-primary" href="{{ path('app_home_page') }}">Home <span class="sr-only"></span></a>
+        <a class="nav-link text-primary" id="pills-home-tab" data-toggle="pill" role="tab" aria-controls="pills-home" aria-selected="true" href="{{ path('app_home_page') }}">Home <span class="sr-only"></span></a>
       </li>
       <li class="nav-item">
-        <a class="nav-link text-primary" href="{{ path('app_about_page') }}">About</a>
+        <a class="nav-link text-primary" id="pills-home-tab" data-toggle="pill"  role="tab" aria-controls="pills-home" aria-selected="true" href="{{ path('app_about_page') }}">About</a>
       </li>
       <li class="nav-item">
         <a class="nav-link text-primary" href="{{ path('app_contact_us_page') }}">Contact Us</a>
@@ -53,7 +53,7 @@
         <a href="{{ path('app_documentation_page') }}">
         <button class="btn btn-outline-primary w-100 py-2 px-5">Login</button>
         </a>
-        <a href="{{ path('app_documentation_page') }}">
+        <a href="{{ path('app_register_temp_page') }}">
         <button class="btn btn-primary w-100 py-2 px-5">Register</button>
         </a>
     </div>
