@@ -3,7 +3,9 @@
 namespace App\Controller;
 
 use App\Entity\Student;
-use App\Form\StudentType; 
+use App\Form\StudentType;
+use App\services\PdfService;
+use Doctrine\ORM\EntityManager;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -145,5 +147,17 @@ public function academicInscription($id, ManagerRegistry $doctrine, Request $req
     return $this->render('student/accademicInscription.html.twig', ['form' => $form->createView()]);
 }
 
+#[Route('/pdf/{id}',name:"pdf_student")]
+public function generatePdf($id, PdfService $pdf, ManagerRegistry $doctrine)
+{
+    $repository = $doctrine->getRepository(Student::class);
+    
+    // Fetch student details (handle potential exceptions)
+    $student = $repository->find($id);
+
+    $html = $this->render('student/detail.html.twig', ['student' => $student]);
+    $pdf->ShowPdfFile($html);
+
+}
 
 }

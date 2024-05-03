@@ -3,6 +3,33 @@
 {% block title %}EC{% endblock %}
 
 {% block body %}
-{{ form(form) }}
-{% endblock %}
+<form method="post" class="row g-3">
+    {{ form_start(form) }}
+
+    <div class="col-md-6">
+        {{ form_row(form.codeEC, {'attr': {'class': 'form-control'}}) }}
+    </div>
+
+    <div class="col-md-6">
+        {{ form_row(form.name, {'attr': {'class': 'form-control'}}) }}
+    </div>
+
+    <div class="col-12">
+        {{ form_row(form.descrption, {'attr': {'class': 'form-control'}}) }}
+    </div>
+
+    <div class="col-md-6">
+        {{ form_row(form.credit, {'attr': {'class': 'form-control'}}) }}
+    </div>
+
+    <div class="col-md-6">
+        {{ form_row(form.ue, {'attr': {'class': 'form-control'}}) }}
+    </div>
+
+    <div class="col-12">
+        {{ form_row(form.submit, {'attr': {'class': 'btn btn-primary'}}) }}
+    </div>
+
+    {{ form_end(form) }}
+</form>{% endblock %}
 
